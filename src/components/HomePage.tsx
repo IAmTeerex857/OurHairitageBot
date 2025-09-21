@@ -2,7 +2,7 @@ import React from 'react';
 import { Sparkles, Scissors, Heart, Zap } from 'lucide-react';
 
 interface HomePageProps {
-  onSuggestedQuestion: (question: string) => void;
+  onSuggestedQuestion: (question: string) => Promise<void>;
 }
 
 const suggestedQuestions = [

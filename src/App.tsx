@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout } from './components/Layout';
 import { HomePage } from './components/HomePage';
 import { ChatInterface } from './components/ChatInterface';
-import { useChats } from './hooks/useChats';
+import { useSupabaseChats } from './hooks/useSupabaseChats';
 import { useSettings } from './hooks/useSettings';
 
 function App() {
@@ -10,6 +10,7 @@ function App() {
     chats, 
     currentChat, 
     currentChatId, 
+    loading,
     createNewChat, 
     addMessage, 
     selectChat,
@@ -22,32 +23,47 @@ function App() {
     rateMessage,
     regenerateResponse,
     deleteMessage
-  } = useChats();
+  } = useSupabaseChats();
 
   const { settings, updateSettings } = useSettings();
 
-  const handleSuggestedQuestion = (question: string) => {
+  const handleSuggestedQuestion = async (question: string) => {
     let chatId = currentChatId;
     
     if (!chatId) {
-      chatId = createNewChat();
+      chatId = await createNewChat();
+      if (!chatId) return; // Handle creation failure
     }
 
-    addMessage(chatId, question, 'user');
+    await addMessage(chatId, question, 'user');
   };
 
-  const handleSendMessage = (content: string, role: 'user' | 'assistant' = 'user') => {
+  const handleSendMessage = async (content: string, role: 'user' | 'assistant' = 'user') => {
     if (!currentChatId) return;
-    addMessage(currentChatId, content, role);
+    await addMessage(currentChatId, content, role);
   };
 
-  const handleNewChat = () => {
-    createNewChat();
+  const handleNewChat = async () => {
+    await createNewChat();
   };
 
   const handleSelectChat = (chatId: string) => {
     selectChat(chatId);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 mx-auto">
+            <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-white mb-2">OUR HAIRITAGE</h2>
+          <p className="text-gray-400">Loading your conversations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Layout

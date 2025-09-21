@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "ourHairitage-supabase": {
+      "command": "node",
+      "args": ["./mcp-server/dist/index.js"],
+      "env": {
+        "SUPABASE_URL": "https://bkmbejthbyqujevayhhs.supabase.co",
+        "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrbWJlanRoYnlxdWpldmF5aGhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODQzNjcwOCwiZXhwIjoyMDc0MDEyNzA4fQ.yVQwsKZOLhFC2Hu96wALSm5KYNzwjAG9Ek21luk9raM"
+      }
+    }
+  }
+}
