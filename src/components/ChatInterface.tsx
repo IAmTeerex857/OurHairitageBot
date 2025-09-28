@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Chat, Message } from '../types/chat';
+import { generateHairCareResponse, isOpenAIConfigured } from '../lib/openai';
 
 interface ChatInterfaceProps {
   chat: Chat;
@@ -134,17 +135,22 @@ export function ChatInterface({
       onDeleteMessage(chat.id, messageId);
       
       // Trigger regeneration after a short delay
-    setTimeout(() => {
-        const responses = [
-          "Let me provide you with a fresh perspective on hair care! The key to healthy hair is understanding your hair's unique needs. Consider factors like porosity, texture, and scalp health when choosing products.",
-          "I'd be happy to give you an updated recommendation! For optimal hair health, focus on gentle cleansing, regular deep conditioning, and protecting your hair from environmental damage.",
-          "Here's a different approach to consider: Hair care isn't one-size-fits-all. Your routine should adapt to seasonal changes, lifestyle factors, and your hair's evolving needs.",
-          "Let me share another valuable insight: The health of your scalp directly impacts hair growth and overall hair quality. Incorporating scalp massage and using clarifying treatments can make a significant difference.",
-          "I have some additional thoughts on this topic: Natural ingredients like argan oil, shea butter, and aloe vera can provide excellent nourishment for various hair types. The key is finding the right combination for your specific needs."
-        ];
-        
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-        onSendMessage(randomResponse, 'assistant');
+      setTimeout(async () => {
+        try {
+          // Get the last user message to regenerate response for
+          const lastUserMessage = [...chat.messages].reverse().find(msg => msg.role === 'user');
+          if (lastUserMessage) {
+            const response = await generateHairCareResponse(
+              lastUserMessage.content, 
+              chat.messages.filter(msg => msg.id !== messageId) // Exclude the deleted message
+            );
+            onSendMessage(response, 'assistant');
+          }
+        } catch (error) {
+          console.error('Error regenerating response:', error);
+          // Fallback response
+          onSendMessage("I'd be happy to give you a fresh perspective on that! Could you help me understand your specific hair concerns so I can provide more personalized advice?", 'assistant');
+        }
       }, 1000);
     }
     setShowMessageMenu(null);
@@ -164,30 +170,15 @@ export function ChatInterface({
         throw new Error('No internet connection');
       }
 
-      const responses = [
-        "Great question! For your hair care routine, I'd recommend starting with a sulfate-free shampoo suited to your hair type. The frequency of washing depends on your hair's oiliness - typically 2-3 times per week for most hair types.",
-        "That's an excellent styling question! Face shape plays a crucial role in choosing the right hairstyle. Could you tell me more about your face shape and current hair length so I can give you more personalized recommendations?",
-        "Hair damage can be frustrating, but it's definitely repairable! Deep conditioning treatments, protein masks, and trimming split ends regularly are key steps. Avoiding heat styling when possible also helps significantly.",
-        "Color protection is essential for maintaining vibrant hair! Use color-safe shampoos, limit heat styling, protect from UV rays with hair sunscreen, and consider weekly color-depositing treatments to refresh your shade.",
-        "I love natural treatments! Some effective options include coconut oil masks for deep moisture, apple cider vinegar rinses for shine, and aloe vera for scalp health. What specific hair concerns are you looking to address?"
-      ];
+      // Check if OpenAI is configured
+      if (!isOpenAIConfigured()) {
+        throw new Error('OpenAI API key not configured');
+      }
 
-      // Simulate network delay and potential failure
-      const delay = 1000 + Math.random() * 2000;
-      const shouldFail = attempt === 1 && Math.random() < 0.1; // 10% chance of failure on first attempt
-
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (shouldFail) {
-            reject(new Error('Service temporarily unavailable'));
-          } else {
-            resolve(null);
-          }
-        }, delay);
-      });
+      // Generate response using OpenAI with conversation context
+      const response = await generateHairCareResponse(message, chat.messages);
       
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-      onSendMessage(randomResponse, 'assistant');
+      onSendMessage(response, 'assistant');
       setIsLoading(false);
       setError(null);
       setRetryCount(0);

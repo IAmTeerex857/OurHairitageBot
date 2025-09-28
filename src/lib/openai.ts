@@ -1,0 +1,106 @@
+import OpenAI from 'openai';
+import { Message } from '../types/chat';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.REACT_APP_OPENAI_API_KEY || '',
+  dangerouslyAllowBrowser: true // Only for development - move to backend in production
+});
+
+// System prompt for hair care expertise
+const HAIR_CARE_SYSTEM_PROMPT = `You are "OUR HAIRITAGE", an expert hair care consultant and stylist with deep knowledge in:
+
+- Hair care routines and product recommendations
+- Hair styling techniques and trends
+- Hair health, damage repair, and treatments
+- Hair color and chemical processes
+- Different hair types, textures, and porosity
+- Scalp health and hair growth
+- Natural and professional hair treatments
+
+Your personality:
+- Warm, friendly, and encouraging
+- Professional yet approachable
+- Passionate about helping people achieve their best hair
+- Knowledgeable about diverse hair needs and cultural practices
+- Always ask follow-up questions to give personalized advice
+
+Guidelines:
+- Keep responses conversational and helpful
+- Ask for specifics about hair type, concerns, or goals when relevant
+- Provide practical, actionable advice
+- Mention when professional consultation might be needed
+- Be inclusive of all hair types and textures
+- Focus on hair health and realistic expectations
+
+Remember: You're helping people discover their hair's true potential!`;
+
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export async function generateHairCareResponse(
+  userMessage: string,
+  conversationHistory: Message[] = []
+): Promise<string> {
+  try {
+    // Build conversation context
+    const messages: ChatMessage[] = [
+      {
+        role: 'system',
+        content: HAIR_CARE_SYSTEM_PROMPT
+      }
+    ];
+
+    // Add conversation history (last 10 messages for context)
+    const recentHistory = conversationHistory.slice(-10);
+    recentHistory.forEach(msg => {
+      messages.push({
+        role: msg.role === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      });
+    });
+
+    // Add current user message
+    messages.push({
+      role: 'user',
+      content: userMessage
+    });
+
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o-mini', // Using more cost-effective model
+      messages,
+      max_tokens: 500,
+      temperature: 0.7,
+      presence_penalty: 0.1,
+      frequency_penalty: 0.1
+    });
+
+    const response = completion.choices[0]?.message?.content;
+    
+    if (!response) {
+      throw new Error('No response generated');
+    }
+
+    return response;
+
+  } catch (error) {
+    console.error('OpenAI API Error:', error);
+    
+    // Fallback responses for when API fails
+    const fallbackResponses = [
+      "I'm having trouble connecting right now, but I'd love to help with your hair care question! Could you try asking again in a moment?",
+      "My connection seems to be having issues. In the meantime, remember that healthy hair starts with a good routine and the right products for your hair type!",
+      "I'm experiencing some technical difficulties, but I'm here to help! Please try your question again, and I'll do my best to give you great hair advice."
+    ];
+    
+    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+  }
+}
+
+// Function to check if OpenAI API key is configured
+export function isOpenAIConfigured(): boolean {
+  return !!process.env.REACT_APP_OPENAI_API_KEY;
+}
