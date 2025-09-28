@@ -4,7 +4,5 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "OPENAI_API_ENVS": "@OPENAI_API_ENVS"
-  }
+  "env": {}
 }
