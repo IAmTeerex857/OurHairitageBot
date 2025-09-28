@@ -1,10 +1,18 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import OpenAI from 'openai';
+import { AzureOpenAI } from 'openai';
+
+const envs = process.env.OPENAI_API_ENVS
+
+function getEnvs () {
+  try {
+    return JSON.parse(envs ?? '{}')
+  } catch {
+    return {}
+  }
+}
 
 // Initialize OpenAI client with server-side API key
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
+const openai = new AzureOpenAI(getEnvs());
 
 // System prompt for hair care expertise
 const HAIR_CARE_SYSTEM_PROMPT = `You are "OUR HAIRITAGE", an expert hair care consultant and stylist with deep knowledge in:
@@ -62,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!envs) {
       return res.status(500).json({ error: 'OpenAI API key not configured' });
     }
 
@@ -100,29 +108,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const response = completion.choices[0]?.message?.content;
-    
+
     if (!response) {
       throw new Error('No response generated');
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       response,
-      usage: completion.usage 
+      usage: completion.usage
     });
 
   } catch (error) {
     console.error('OpenAI API Error:', error);
-    
+
     // Return fallback response for errors
     const fallbackResponses = [
       "I'm having trouble connecting right now, but I'd love to help with your hair care question! Could you try asking again in a moment?",
       "My connection seems to be having issues. In the meantime, remember that healthy hair starts with a good routine and the right products for your hair type!",
       "I'm experiencing some technical difficulties, but I'm here to help! Please try your question again, and I'll do my best to give you great hair advice."
     ];
-    
+
     const fallbackResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
-    
-    return res.status(200).json({ 
+
+    return res.status(200).json({
       response: fallbackResponse,
       fallback: true,
       error: error instanceof Error ? error.message : 'Unknown error'
