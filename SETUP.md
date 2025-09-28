@@ -1,12 +1,12 @@
 # OurHairitage Bot Setup Guide
 
-## Environment Variables
+## Local Development
 
 Create a `.env` file in the root directory with the following variables:
 
 ```env
-# OpenAI API Configuration
-REACT_APP_OPENAI_API_KEY=your_openai_api_key_here
+# OpenAI API Configuration (for serverless functions)
+OPENAI_API_KEY=your_openai_api_key_here
 
 # Supabase Configuration  
 REACT_APP_SUPABASE_URL=https://your-project.supabase.co
@@ -26,11 +26,25 @@ REACT_APP_SUPABASE_ANON_KEY=your_anon_key_here
 2. Get your anon key from Supabase Dashboard → Settings → API
 3. Add both to your `.env` file
 
-## Important Notes
+## Vercel Deployment
 
-⚠️ **Security Warning**: The current setup includes OpenAI API calls from the browser for development. 
+### Environment Variables for Vercel
+Set these in your Vercel dashboard:
 
-**For Production**: Move OpenAI API calls to a backend server to keep your API key secure.
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### Deploy to Vercel
+1. Connect your GitHub repository to Vercel
+2. Add the environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+## Security Features
+
+✅ **Secure**: OpenAI API key is kept server-side in Vercel functions
+✅ **Client-safe**: No sensitive keys exposed in browser
+✅ **Serverless**: Automatic scaling with Vercel
 
 ## Running the App
 
