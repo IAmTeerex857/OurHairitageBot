@@ -115,10 +115,13 @@ export function Layout({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-gray-700">
-            <h1 className="text-lg logo-font text-white">
-              <span className="font-light">OUR</span>
-              <span className="font-normal ml-1">HAIRITAGE</span>
-            </h1>
+            <div className="flex items-center space-x-2">
+              <img 
+                src="/logo.png" 
+                alt="OUR HAIRITAGE" 
+                className="h-8 w-auto object-contain"
+              />
+            </div>
             <button 
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"

@@ -32,14 +32,15 @@ export function HomePage({ onSuggestedQuestion }: HomePageProps) {
       <div className="flex-1 flex flex-col items-center justify-center p-8 max-w-4xl mx-auto w-full">
         {/* Welcome Section */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-6 shadow-lg">
-            <Sparkles className="w-10 h-10 text-black" />
+          <div className="inline-flex items-center justify-center mb-6">
+            <img 
+              src="/logo.png" 
+              alt="OUR HAIRITAGE" 
+              className="h-20 w-auto object-contain"
+            />
           </div>
           <h1 className="text-4xl md:text-5xl text-white mb-4">
-            Welcome to <span className="logo-font">
-              <span className="font-light">OUR</span>
-              <span className="font-normal ml-1">HAIRITAGE</span>
-            </span>
+            Welcome to OUR HAIRITAGE
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Your personal hair care consultant. Ask me anything about hair care, styling, treatments, and more. 
