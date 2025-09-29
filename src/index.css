@@ -8,3 +8,8 @@
   font-family: 'Playfair Display', serif;
   letter-spacing: 0.05em;
 }
+
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 120, 128, 0.4) transparent;
+}
