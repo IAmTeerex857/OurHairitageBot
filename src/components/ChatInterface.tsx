@@ -93,7 +93,7 @@ export function ChatInterface({
   useEffect(() => {
     return () => {
       if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current);
+        window.clearTimeout(retryTimeoutRef.current);
       }
     };
   }, []);
@@ -102,7 +102,7 @@ export function ChatInterface({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedMessageId(messageId);
-      setTimeout(() => setCopiedMessageId(null), 2000);
+      window.setTimeout(() => setCopiedMessageId(null), 2000);
       setShowMessageMenu(null);
     } catch (err) {
       console.error('Failed to copy text:', err);
@@ -135,7 +135,7 @@ export function ChatInterface({
       onDeleteMessage(chat.id, messageId);
       
       // Trigger regeneration after a short delay
-      setTimeout(async () => {
+      window.setTimeout(async () => {
         try {
           // Get the last user message to regenerate response for
           const lastUserMessage = [...chat.messages].reverse().find(msg => msg.role === 'user');
@@ -191,7 +191,7 @@ export function ChatInterface({
         setError(`Connection failed. Retrying in ${Math.ceil(retryDelay / 1000)} seconds... (${attempt}/${maxRetries})`);
         setRetryCount(attempt);
         
-        retryTimeoutRef.current = setTimeout(() => {
+        retryTimeoutRef.current = window.setTimeout(() => {
           generateAIResponse(message, attempt + 1);
         }, retryDelay);
       } else {
@@ -444,7 +444,10 @@ export function ChatInterface({
                               {showMessageMenu === message.id && (
                                 <div className="absolute right-0 top-10 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px]">
                                   <button
-                                    onClick={() => onDeleteMessage(chat.id, message.id)}
+                                    onClick={() => {
+                                      onDeleteMessage(chat.id, message.id);
+                                      setShowMessageMenu(null); // Close menu immediately
+                                    }}
                                     className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center space-x-2 rounded-lg"
                                   >
                                     <Trash2 className="w-4 h-4" />

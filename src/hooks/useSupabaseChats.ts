@@ -27,9 +27,12 @@ export function useSupabaseChats() {
   });
 
   // Load chats from Supabase
-  const loadChats = useCallback(async () => {
+  const loadChats = useCallback(async (showLoading = false) => {
     try {
-      setLoading(true);
+      // Only show full loading on initial load, not on real-time updates
+      if (showLoading) {
+        setLoading(true);
+      }
       
       // Get chats for this device
       const { data: chatsData, error: chatsError } = await supabase
@@ -42,7 +45,9 @@ export function useSupabaseChats() {
 
       if (!chatsData || chatsData.length === 0) {
         setChats([]);
-        setLoading(false);
+        if (showLoading) {
+          setLoading(false);
+        }
         return;
       }
 
@@ -72,13 +77,15 @@ export function useSupabaseChats() {
     } catch (error) {
       console.error('Error loading chats:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   }, [deviceId]);
 
   // Set up real-time subscriptions
   useEffect(() => {
-    loadChats();
+    loadChats(true); // Show loading only on initial load
 
     // Set up real-time subscription for chats
     const channel = supabase
@@ -92,7 +99,7 @@ export function useSupabaseChats() {
           filter: `device_id=eq.${deviceId}`
         },
         () => {
-          loadChats(); // Reload when chats change
+          loadChats(false); // No loading screen for real-time updates
         }
       )
       .on(
@@ -103,7 +110,7 @@ export function useSupabaseChats() {
           table: 'messages'
         },
         () => {
-          loadChats(); // Reload when messages change
+          loadChats(false); // No loading screen for real-time updates
         }
       )
       .subscribe();
@@ -279,6 +286,20 @@ export function useSupabaseChats() {
   }, []);
 
   const rateMessage = useCallback(async (chatId: string, messageId: string, rating: 'like' | 'dislike' | null) => {
+    // Optimistic update - update UI immediately
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId 
+        ? {
+            ...chat,
+            messages: chat.messages.map(msg => 
+              msg.id === messageId 
+                ? { ...msg, rating }
+                : msg
+            )
+          }
+        : chat
+    ));
+
     try {
       const { error } = await supabase
         .from('messages')
@@ -286,13 +307,43 @@ export function useSupabaseChats() {
         .eq('id', messageId)
         .eq('chat_id', chatId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert optimistic update on error
+        setChats(prev => prev.map(chat => 
+          chat.id === chatId 
+            ? {
+                ...chat,
+                messages: chat.messages.map(msg => 
+                  msg.id === messageId 
+                    ? { ...msg, rating: null }
+                    : msg
+                )
+              }
+            : chat
+        ));
+        throw error;
+      }
     } catch (error) {
       console.error('Error rating message:', error);
     }
   }, []);
 
   const deleteMessage = useCallback(async (chatId: string, messageId: string) => {
+    // Store the original message for potential rollback
+    const originalMessage = chats
+      .find(chat => chat.id === chatId)
+      ?.messages.find(msg => msg.id === messageId);
+
+    // Optimistic update - remove message immediately
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId 
+        ? {
+            ...chat,
+            messages: chat.messages.filter(msg => msg.id !== messageId)
+          }
+        : chat
+    ));
+
     try {
       const { error } = await supabase
         .from('messages')
@@ -300,11 +351,26 @@ export function useSupabaseChats() {
         .eq('id', messageId)
         .eq('chat_id', chatId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert optimistic update on error - restore the message
+        if (originalMessage) {
+          setChats(prev => prev.map(chat => 
+            chat.id === chatId 
+              ? {
+                  ...chat,
+                  messages: [...chat.messages, originalMessage].sort((a, b) => 
+                    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+                  )
+                }
+              : chat
+          ));
+        }
+        throw error;
+      }
     } catch (error) {
       console.error('Error deleting message:', error);
     }
-  }, []);
+  }, [chats]);
 
   // Temporary functions for compatibility
   const setMessageEditing = useCallback((_chatId: string, _messageId: string, _isEditing: boolean) => {
