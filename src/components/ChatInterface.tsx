@@ -1,33 +1,60 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Sparkles, Copy, Edit3, RefreshCw, ThumbsUp, ThumbsDown, MoreHorizontal, Trash2, Check, X, AlertCircle } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { Chat, Message } from '../types/chat';
-import { generateHairCareResponse, isOpenAIConfigured } from '../lib/openai';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Send,
+  User,
+  Sparkles,
+  Copy,
+  Edit3,
+  RefreshCw,
+  ThumbsUp,
+  ThumbsDown,
+  MoreHorizontal,
+  Trash2,
+  Check,
+  X,
+  AlertCircle,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Chat, Message } from "../types/chat";
+import { generateHairCareResponse, isOpenAIConfigured } from "../lib/openai";
+import clsx from "clsx";
 
 interface ChatInterfaceProps {
   chat: Chat;
-  onSendMessage: (content: string, role?: 'user' | 'assistant') => void;
-  onEditMessage: (chatId: string, messageId: string, newContent: string) => void;
-  onSetMessageEditing: (chatId: string, messageId: string, isEditing: boolean) => void;
-  onRateMessage: (chatId: string, messageId: string, rating: 'like' | 'dislike' | null) => void;
+  onSendMessage: (content: string, role?: "user" | "assistant") => void;
+  onEditMessage: (
+    chatId: string,
+    messageId: string,
+    newContent: string
+  ) => void;
+  onSetMessageEditing: (
+    chatId: string,
+    messageId: string,
+    isEditing: boolean
+  ) => void;
+  onRateMessage: (
+    chatId: string,
+    messageId: string,
+    rating: "like" | "dislike" | null
+  ) => void;
   onRegenerateResponse: (chatId: string, messageId: string) => void;
   onDeleteMessage: (chatId: string, messageId: string) => void;
 }
 
-export function ChatInterface({ 
-  chat, 
-  onSendMessage, 
-  onEditMessage, 
-  onSetMessageEditing, 
-  onRateMessage, 
-  onRegenerateResponse: _, 
-  onDeleteMessage 
+export function ChatInterface({
+  chat,
+  onSendMessage,
+  onEditMessage,
+  onSetMessageEditing,
+  onRateMessage,
+  onRegenerateResponse: _,
+  onDeleteMessage,
 }: ChatInterfaceProps) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [editingContent, setEditingContent] = useState('');
+  const [editingContent, setEditingContent] = useState("");
   const [showMessageMenu, setShowMessageMenu] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,25 +65,12 @@ export function ChatInterface({
   const retryTimeoutRef = useRef<number | null>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [chat.messages]);
-
-  // Auto-resize textarea
-  const adjustTextareaHeight = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
-  };
-
-  useEffect(() => {
-    adjustTextareaHeight();
-  }, [input]);
 
   // Close message menu when clicking outside
   useEffect(() => {
@@ -65,8 +79,8 @@ export function ChatInterface({
         setShowMessageMenu(null);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showMessageMenu]);
 
   // Network connectivity monitoring
@@ -77,15 +91,17 @@ export function ChatInterface({
     };
     const handleOffline = () => {
       setIsOnline(false);
-      setError('No internet connection. Please check your network and try again.');
+      setError(
+        "No internet connection. Please check your network and try again."
+      );
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -105,7 +121,7 @@ export function ChatInterface({
       window.setTimeout(() => setCopiedMessageId(null), 2000);
       setShowMessageMenu(null);
     } catch (err) {
-      console.error('Failed to copy text:', err);
+      console.error("Failed to copy text:", err);
     }
   };
 
@@ -118,85 +134,99 @@ export function ChatInterface({
   const handleSaveEdit = (messageId: string) => {
     if (editingContent.trim()) {
       onEditMessage(chat.id, messageId, editingContent.trim());
-      setEditingContent('');
+      setEditingContent("");
     }
   };
 
   const handleCancelEdit = (messageId: string) => {
     onSetMessageEditing(chat.id, messageId, false);
-    setEditingContent('');
+    setEditingContent("");
   };
 
   const handleRegenerateResponse = (messageId: string) => {
     // Find the last user message before this assistant message to regenerate
-    const messageIndex = chat.messages.findIndex(msg => msg.id === messageId);
+    const messageIndex = chat.messages.findIndex((msg) => msg.id === messageId);
     if (messageIndex > 0) {
       // Remove the current assistant message and regenerate
       onDeleteMessage(chat.id, messageId);
-      
+
       // Trigger regeneration after a short delay
       window.setTimeout(async () => {
         try {
           // Get the last user message to regenerate response for
-          const lastUserMessage = [...chat.messages].reverse().find(msg => msg.role === 'user');
+          const lastUserMessage = [...chat.messages]
+            .reverse()
+            .find((msg) => msg.role === "user");
           if (lastUserMessage) {
             const response = await generateHairCareResponse(
-              lastUserMessage.content, 
-              chat.messages.filter(msg => msg.id !== messageId) // Exclude the deleted message
+              lastUserMessage.content,
+              chat.messages.filter((msg) => msg.id !== messageId) // Exclude the deleted message
             );
-            onSendMessage(response, 'assistant');
+            onSendMessage(response, "assistant");
           }
         } catch (error) {
-          console.error('Error regenerating response:', error);
+          console.error("Error regenerating response:", error);
           // Fallback response
-          onSendMessage("I'd be happy to give you a fresh perspective on that! Could you help me understand your specific hair concerns so I can provide more personalized advice?", 'assistant');
+          onSendMessage(
+            "I'd be happy to give you a fresh perspective on that! Could you help me understand your specific hair concerns so I can provide more personalized advice?",
+            "assistant"
+          );
         }
       }, 1000);
     }
     setShowMessageMenu(null);
   };
 
-  const handleRating = (messageId: string, rating: 'like' | 'dislike') => {
-    const currentMessage = chat.messages.find(msg => msg.id === messageId);
+  const handleRating = (messageId: string, rating: "like" | "dislike") => {
+    const currentMessage = chat.messages.find((msg) => msg.id === messageId);
     const newRating = currentMessage?.rating === rating ? null : rating;
     onRateMessage(chat.id, messageId, newRating);
     setShowMessageMenu(null);
   };
 
-  const generateAIResponse = async (message: string, attempt: number = 1): Promise<void> => {
+  const generateAIResponse = async (
+    message: string,
+    attempt: number = 1
+  ): Promise<void> => {
     try {
       // Check network connectivity
       if (!isOnline) {
-        throw new Error('No internet connection');
+        throw new Error("No internet connection");
       }
 
       // Check if OpenAI is configured
       if (!isOpenAIConfigured()) {
-        throw new Error('OpenAI API key not configured');
+        throw new Error("OpenAI API key not configured");
       }
 
       // Generate response using OpenAI with conversation context
       const response = await generateHairCareResponse(message, chat.messages);
-      
-      onSendMessage(response, 'assistant');
+
+      onSendMessage(response, "assistant");
       setIsLoading(false);
       setError(null);
       setRetryCount(0);
     } catch (error) {
-      console.error('Error generating AI response:', error);
-      
+      console.error("Error generating AI response:", error);
+
       const maxRetries = 3;
       if (attempt < maxRetries) {
         const retryDelay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // Exponential backoff
-        setError(`Connection failed. Retrying in ${Math.ceil(retryDelay / 1000)} seconds... (${attempt}/${maxRetries})`);
+        setError(
+          `Connection failed. Retrying in ${Math.ceil(
+            retryDelay / 1000
+          )} seconds... (${attempt}/${maxRetries})`
+        );
         setRetryCount(attempt);
-        
+
         retryTimeoutRef.current = window.setTimeout(() => {
           generateAIResponse(message, attempt + 1);
         }, retryDelay);
       } else {
         setIsLoading(false);
-        setError('Failed to get response after multiple attempts. Please try again.');
+        setError(
+          "Failed to get response after multiple attempts. Please try again."
+        );
         setRetryCount(0);
       }
     }
@@ -208,17 +238,19 @@ export function ChatInterface({
 
     // Check network connectivity before sending
     if (!isOnline) {
-      setError('No internet connection. Please check your network and try again.');
+      setError(
+        "No internet connection. Please check your network and try again."
+      );
       return;
     }
 
     const message = input.trim();
-    setInput('');
+    setInput("");
     setIsLoading(true);
     setError(null);
     setRetryCount(0);
 
-    onSendMessage(message, 'user');
+    onSendMessage(message, "user");
 
     // Generate AI response with error handling
     await generateAIResponse(message);
@@ -226,8 +258,10 @@ export function ChatInterface({
 
   const handleRetry = () => {
     if (!chat.messages.length) return;
-    
-    const lastUserMessage = [...chat.messages].reverse().find(msg => msg.role === 'user');
+
+    const lastUserMessage = [...chat.messages]
+      .reverse()
+      .find((msg) => msg.role === "user");
     if (lastUserMessage) {
       setIsLoading(true);
       setError(null);
@@ -237,11 +271,11 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full bg-black">
+    <div className="flex flex-col h-full bg-slate-800">
       {/* Messages */}
-      <div 
-        className="flex-1 overflow-y-auto p-6 space-y-6"
-        role="log" 
+      <div
+        className="flex-1 overflow-y-auto p-6 space-y-6 "
+        role="log"
         aria-label="Chat conversation"
         aria-live="polite"
       >
@@ -250,216 +284,178 @@ export function ChatInterface({
             <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Start Your Hair Journey</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Start Your Hair Journey
+            </h3>
             <p className="text-gray-400 max-w-md">
-              Ask me anything about hair care, styling tips, product recommendations, or hair health. 
-              I'm here to help you achieve your best hair!
+              Ask me anything about hair care, styling tips, product
+              recommendations, or hair health. I'm here to help you achieve your
+              best hair!
             </p>
           </div>
         ) : (
-          <>
+          <div className="w-full max-w-2xl mx-auto">
             {chat.messages.map((message) => (
               <div
-                key={message.id}
-                className={`group flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 md:mb-6 px-2 md:px-0`}
+                className={`flex ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                } mb-6`}
               >
-                <div className={`flex max-w-4xl w-full ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div
+                  className={`flex max-w-4xl w-full ${
+                    message.role === "user" ? "flex-row-reverse" : ""
+                  }`}
+                >
                   {/* Avatar */}
-                  <div className={`flex-shrink-0 ${message.role === 'user' ? 'ml-2 md:ml-4' : 'mr-2 md:mr-4'}`}>
-                    <div className={`w-10 h-10 md:w-8 md:h-8 rounded-full flex items-center justify-center ${
-                      message.role === 'user' 
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
-                        : 'bg-gradient-to-r from-amber-500 to-orange-500'
-                    }`}>
-                      {message.role === 'user' ? (
-                        <User className="w-5 h-5 text-white" />
-                      ) : (
-                        <Sparkles className="w-5 h-5 text-white" />
-                      )}
-                    </div>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      message.role === "user"
+                        ? "bg-blue-600 ml-4"
+                        : "mr-4"
+                    }`}
+                  >
+                    {message.role === "user" ? (
+                      <User className="w-5 h-5" />
+                    ) : (
+                      <img src="/favicon.svg" className="w-8 h-8" />
+                    )}
                   </div>
 
-                  {/* Message Content */}
-                  <div className="flex-1 min-w-0">
-                    {/* Message Header */}
-                    <div className={`flex items-center mb-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <span className="text-sm font-semibold text-gray-300">
-                        {message.role === 'user' ? 'You' : 'OUR HAIRITAGE'}
+                  {/* Message */}
+                  <div className="flex-1">
+                    {/* <div
+                      className={`flex items-center mb-2 ${
+                        message.role === "user" ? "justify-end" : ""
+                      }`}
+                    >
+                      <span className="font-semibold">
+                        {message.role === "user" ? "You" : "AI"}
                       </span>
-                      <span className="text-xs text-gray-500 ml-2">
-                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                  </div>
+                    </div> */}
 
-                  {/* Message Bubble */}
-                    <div className={`relative ${message.role === 'user' ? 'flex justify-end' : ''}`}>
-                      <div className={`rounded-2xl px-4 py-3 md:px-6 md:py-4 relative ${
-                    message.role === 'user'
-                          ? 'bg-blue-600 text-white max-w-sm md:max-w-lg'
-                          : 'bg-gray-900 text-white border border-gray-700 w-full'
-                      }`}>
+                    <div
+                      className={`${
+                        message.role === "user" ? "flex justify-end" : ""
+                      }`}
+                    >
+                      <div
+                        className={`rounded-2xl  text-white ${
+                          message.role === "user"
+                            ? "bg-slate-700 max-w-lg py-2 px-4"
+                            : "w-full"
+                        }`}
+                      >
                         {message.isEditing ? (
-                          <div className="space-y-3">
+                          <div>
                             <textarea
                               value={editingContent}
-                              onChange={(e) => setEditingContent(e.target.value)}
-                              className="w-full bg-gray-800 text-white px-3 py-2 rounded border border-gray-600 focus:outline-none focus:ring-2 focus:ring-white resize-none"
+                              onChange={(e) =>
+                                setEditingContent(e.target.value)
+                              }
+                              className="w-full bg-gray-700 px-3 py-2 rounded"
                               rows={3}
-                              autoFocus
                             />
-                            <div className="flex space-x-2">
+                            <div className="flex gap-2 mt-2">
                               <button
                                 onClick={() => handleSaveEdit(message.id)}
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-sm flex items-center space-x-1"
+                                className="px-3 py-1 bg-green-600 rounded"
                               >
-                                <Check className="w-4 h-4" />
-                                <span>Save</span>
+                                Save
                               </button>
                               <button
                                 onClick={() => handleCancelEdit(message.id)}
-                                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm flex items-center space-x-1"
+                                className="px-3 py-1 bg-gray-600 rounded"
                               >
-                                <X className="w-4 h-4" />
-                                <span>Cancel</span>
+                                Cancel
                               </button>
                             </div>
                           </div>
                         ) : (
-                          <div className="prose prose-invert max-w-none">
-                            {message.role === 'assistant' ? (
-                              <ReactMarkdown
-                                components={{
-                                  code({ node, inline, className, children, ...props }: any) {
-                                    const match = /language-(\w+)/.exec(className || '');
-                                    return !inline && match ? (
-                                      <SyntaxHighlighter
-                                        style={oneDark}
-                                        language={match[1]}
-                                        PreTag="div"
-                                        className="rounded-lg"
-                                        {...props}
-                                      >
-                                        {String(children).replace(/\n$/, '')}
-                                      </SyntaxHighlighter>
-                                    ) : (
-                                      <code className="bg-gray-800 px-1 py-0.5 rounded text-sm" {...props}>
-                                        {children}
-                                      </code>
-                                    );
-                                  },
-                                }}
-                              >
-                                {message.content}
-                              </ReactMarkdown>
+                          <div>
+                            {message.role === "assistant" ? (
+                              <ReactMarkdown>{message.content}</ReactMarkdown>
                             ) : (
-                              <p className="whitespace-pre-wrap leading-relaxed m-0">
-                      {message.content}
-                    </p>
+                              <p>{message.content}</p>
                             )}
                           </div>
                         )}
                       </div>
-
-                      {/* Message Actions */}
-                      {!message.isEditing && (
-                        <div className={`mt-2 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
-                          <div className="flex items-center space-x-1 bg-gray-800 md:bg-transparent rounded-lg md:rounded-none p-1 md:p-0 shadow-lg md:shadow-none">
-                            {/* Quick Actions */}
-                            <button
-                              onClick={() => copyToClipboard(message.content, message.id)}
-                              className="p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center"
-                              title="Copy message content"
-                              aria-label="Copy message content"
-                            >
-                              {copiedMessageId === message.id ? (
-                                <Check className="w-4 h-4 text-green-400" />
-                              ) : (
-                                <Copy className="w-4 h-4 text-gray-400" />
-                              )}
-                            </button>
-
-                            {message.role === 'user' && (
-                              <button
-                                onClick={() => handleStartEdit(message)}
-                                className="p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center"
-                                title="Edit message"
-                                aria-label="Edit this message"
-                              >
-                                <Edit3 className="w-4 h-4 text-gray-400" />
-                              </button>
-                            )}
-
-                            {message.role === 'assistant' && (
-                              <>
-                                <button
-                                  onClick={() => handleRegenerateResponse(message.id)}
-                                  className="p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center"
-                                  title="Regenerate response"
-                                  aria-label="Regenerate AI response"
-                                >
-                                  <RefreshCw className="w-4 h-4 text-gray-400" />
-                                </button>
-
-                                <button
-                                  onClick={() => handleRating(message.id, 'like')}
-                                  className={`p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center ${
-                                    message.rating === 'like' ? 'text-green-400' : 'text-gray-400'
-                                  }`}
-                                  title={message.rating === 'like' ? 'Remove like' : 'Like this response'}
-                                  aria-label={message.rating === 'like' ? 'Remove like from response' : 'Like this response'}
-                                  aria-pressed={message.rating === 'like'}
-                                >
-                                  <ThumbsUp className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  onClick={() => handleRating(message.id, 'dislike')}
-                                  className={`p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center ${
-                                    message.rating === 'dislike' ? 'text-red-400' : 'text-gray-400'
-                                  }`}
-                                  title={message.rating === 'dislike' ? 'Remove dislike' : 'Dislike this response'}
-                                  aria-label={message.rating === 'dislike' ? 'Remove dislike from response' : 'Dislike this response'}
-                                  aria-pressed={message.rating === 'dislike'}
-                                >
-                                  <ThumbsDown className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-
-                            {/* More Menu */}
-                            <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowMessageMenu(showMessageMenu === message.id ? null : message.id);
-                                }}
-                                className="p-3 md:p-2 hover:bg-gray-700 active:bg-gray-600 rounded-lg transition-colors min-w-[44px] min-h-[44px] md:min-w-auto md:min-h-auto flex items-center justify-center"
-                                title="More options"
-                                aria-label="More message options"
-                                aria-expanded={showMessageMenu === message.id}
-                              >
-                                <MoreHorizontal className="w-4 h-4 text-gray-400" />
-                              </button>
-
-                              {showMessageMenu === message.id && (
-                                <div className="absolute right-0 top-10 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 min-w-[120px]">
-                                  <button
-                                    onClick={() => {
-                                      onDeleteMessage(chat.id, message.id);
-                                      setShowMessageMenu(null); // Close menu immediately
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center space-x-2 rounded-lg"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span>Delete</span>
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
+
+                    {/* Actions */}
+                    {!message.isEditing && (
+                      <div
+                        className={`flex gap-1 mt-2  ${
+                          message.role === "user"
+                            ? "justify-end opacity-0 hover:opacity-100"
+                            : ""
+                        }`}
+                      >
+                        <button
+                          onClick={() =>
+                            copyToClipboard(message.content, message.id)
+                          }
+                          className="p-2 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                        >
+                          {copiedMessageId === message.id ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </button>
+
+                        {message.role === "user" && (
+                          <button
+                            onClick={() => handleStartEdit(message)}
+                            className="p-2 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {message.role === "assistant" && (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleRegenerateResponse(message.id)
+                              }
+                              className="p-2 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRating(message.id, "like")}
+                              className={clsx(
+                                "p-2 hover:bg-gray-700 rounded",
+                                message.rating === "like"
+                                  ? "text-green-400"
+                                  : "text-gray-400 hover:text-white"
+                              )}
+                            >
+                              <ThumbsUp className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleRating(message.id, "dislike")
+                              }
+                              className={clsx(
+                                "p-2 hover:bg-gray-700 rounded",
+                                message.rating === "dislike"
+                                  ? "text-red-400"
+                                  : "text-gray-400 hover:text-white"
+                              )}
+                            >
+                              <ThumbsDown className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={() => onDeleteMessage(chat.id, message.id)}
+                          className="p-2 hover:bg-gray-700 rounded text-gray-400 hover:text-white"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -475,16 +471,29 @@ export function ChatInterface({
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
-                      <span className="text-sm font-semibold text-gray-300">OUR HAIRITAGE</span>
+                      <span className="text-sm font-semibold text-gray-300">
+                        OUR HAIRITAGE
+                      </span>
                       <span className="text-xs text-gray-500 ml-2">
-                        {retryCount > 0 ? `retrying... (${retryCount}/3)` : 'typing...'}
+                        {retryCount > 0
+                          ? `retrying... (${retryCount}/3)`
+                          : "typing..."}
                       </span>
                     </div>
                     <div className="bg-gray-900 rounded-2xl px-6 py-4 border border-gray-700 inline-block">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      <div className="flex space-x-1">
+                        <div
+                          className="w-2 h-2 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        ></div>
                       </div>
                     </div>
                   </div>
@@ -513,45 +522,46 @@ export function ChatInterface({
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Form */}
-      <div className="border-t border-gray-700 p-4 md:p-6 bg-gray-900">
-        <form onSubmit={handleSubmit} className="flex items-end space-x-3 md:space-x-4">
-          <div className="flex-1">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                } else if (e.key === 'Enter' && e.shiftKey) {
-                  // Allow newlines with Shift+Enter
-                }
-              }}
-              placeholder="Ask about hair care, styling, treatments..."
-              className="w-full px-4 py-3 md:px-4 md:py-3 bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent resize-none overflow-hidden text-base md:text-sm"
-              rows={1}
-              style={{ minHeight: '56px', maxHeight: '120px' }}
-            />
+      <div className="p-4 md:p-3">
+        <form onSubmit={handleSubmit} className="flex items-end md:space-x-4">
+          <div className="w-full max-w-2xl mx-auto">
+            <div className="flex items-end border border-slate-700 rounded-xl shadow-sm focus:shadow p-2 gap-4">
+              <textarea
+                rows={input.length < 80 ? 1 : undefined}
+                className="resize-none w-full bg-transparent placeholder:text-slate-400 text-slate-400 text-base  p-2 transition duration-300 ease focus:outline-none"
+                placeholder="Ask about hair care, styling, treatments..."
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  } else if (e.key === "Enter" && e.shiftKey) {
+                    // Allow newlines with Shift+Enter
+                  }
+                }}
+              />
+
+              <button
+                disabled={!input.trim() || isLoading}
+                className="flex items-center rounded-full bg-white py-2.5 px-2.5 border border-transparent text-center text-sm text-black transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-300 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                type="submit"
+              >
+                <Send className="w-6 h-6 md:w-5 md:h-5 mx-auto" />
+              </button>
+            </div>
           </div>
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="flex-shrink-0 p-3 md:p-3 bg-white text-black rounded-2xl hover:bg-gray-200 active:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation"
-            style={{ minHeight: '56px', width: '56px' }}
-          >
-            <Send className="w-6 h-6 md:w-5 md:h-5 mx-auto" />
-          </button>
         </form>
-        
+
         {/* Helpful shortcuts */}
-        <div className="mt-2 text-center text-xs text-gray-500">
+        <div className="mt-3 text-center text-xs text-gray-500">
           Press Enter to send • Shift+Enter for new line
         </div>
       </div>

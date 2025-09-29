@@ -4,6 +4,7 @@ import { HomePage } from './components/HomePage';
 import { ChatInterface } from './components/ChatInterface';
 import { useSupabaseChats } from './hooks/useSupabaseChats';
 import { useSettings } from './hooks/useSettings';
+import { useEffect } from 'react';
 
 function App() {
   const { 

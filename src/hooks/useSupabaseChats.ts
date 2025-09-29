@@ -208,6 +208,8 @@ export function useSupabaseChats() {
 
       if (error) throw error;
 
+      setChats(prev => prev.filter(c => c.id !== chatId));
+
       if (currentChatId === chatId) {
         setCurrentChatId(null);
       }

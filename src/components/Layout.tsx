@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, Plus, MoreHorizontal, Trash2, Edit3, Download, Settings, Search } from 'lucide-react';
-import { Chat } from '../types/chat';
-import { SearchDialog } from './SearchDialog';
-import { SettingsDialog, UserSettings } from './SettingsDialog';
+import React, { useState, useEffect } from "react";
+import {
+  Menu,
+  X,
+  Plus,
+  MoreHorizontal,
+  Trash2,
+  Edit3,
+  Download,
+  Settings,
+  Search,
+} from "lucide-react";
+import { Chat } from "../types/chat";
+import { SearchDialog } from "./SearchDialog";
+import { SettingsDialog, UserSettings } from "./SettingsDialog";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,22 +28,22 @@ interface LayoutProps {
   onSettingsChange: (settings: UserSettings) => void;
 }
 
-export function Layout({ 
-  children, 
-  chats, 
-  currentChatId, 
-  onSelectChat, 
-  onNewChat, 
-  onDeleteChat, 
-  onRenameChat, 
-  onExportChat, 
+export function Layout({
+  children,
+  chats,
+  currentChatId,
+  onSelectChat,
+  onNewChat,
+  onDeleteChat,
+  onRenameChat,
+  onExportChat,
   onClearAllChats,
   settings,
-  onSettingsChange
+  onSettingsChange,
 }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState('');
+  const [editingTitle, setEditingTitle] = useState("");
   const [showChatMenu, setShowChatMenu] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -49,12 +59,12 @@ export function Layout({
       onRenameChat(editingChatId, editingTitle.trim());
     }
     setEditingChatId(null);
-    setEditingTitle('');
+    setEditingTitle("");
   };
 
   const handleCancelEdit = () => {
     setEditingChatId(null);
-    setEditingTitle('');
+    setEditingTitle("");
   };
 
   const handleDeleteChat = (chatId: string) => {
@@ -67,32 +77,33 @@ export function Layout({
     setShowChatMenu(null);
   };
 
-  // Close chat menu when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
-      if (showChatMenu) {
+    const handleGlobalMouseDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      // if click is NOT inside any chat menu region, close it
+      if (target && !target.closest("[data-chat-menu]")) {
         setShowChatMenu(null);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleGlobalMouseDown);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleGlobalMouseDown);
     };
-  }, [showChatMenu]);
+  }, []);
 
   // Keyboard shortcut for search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         setSearchOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -100,29 +111,31 @@ export function Layout({
     <div className="flex h-screen bg-black">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-75 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`
+      <div
+        className={`
         fixed md:relative inset-y-0 left-0 z-50 w-80 md:w-64 bg-gray-900 
         border-r border-gray-700 transform transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-      `}>
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+      `}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-gray-700">
             <div className="flex items-center space-x-2">
-              <img 
-                src="/logo.png" 
-                alt="OUR HAIRITAGE" 
+              <img
+                src="/logo.png"
+                alt="OUR HAIRITAGE"
                 className="h-8 w-auto object-contain"
               />
             </div>
-            <button 
+            <button
               onClick={() => setSidebarOpen(false)}
               className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
             >
@@ -149,9 +162,10 @@ export function Layout({
                   key={chat.id}
                   className={`
                     group relative w-full text-left px-3 py-3 rounded-lg transition-colors cursor-pointer
-                    ${currentChatId === chat.id 
-                      ? 'bg-gray-800' 
-                      : 'hover:bg-gray-800'
+                    ${
+                      currentChatId === chat.id
+                        ? "bg-gray-800"
+                        : "hover:bg-gray-800"
                     }
                   `}
                   onClick={() => {
@@ -169,14 +183,14 @@ export function Layout({
                           value={editingTitle}
                           onChange={(e) => setEditingTitle(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === "Enter") {
                               handleSaveEdit();
-                            } else if (e.key === 'Escape') {
+                            } else if (e.key === "Escape") {
                               handleCancelEdit();
                             }
                           }}
                           onBlur={handleSaveEdit}
-                          className="w-full bg-gray-700 text-white px-2 py-1 rounded text-sm focus:outline-none focus:ring-2 focus:ring-white"
+                          className="w-full bg-gray-700 text-white px-2 py-1 rounded text-sm focus:outline-none focus:ring-1 focus:ring-slate-600"
                           autoFocus
                         />
                       ) : (
@@ -185,20 +199,22 @@ export function Layout({
                         </h3>
                       )}
                     </div>
-                    
+
                     {/* Chat Menu Button */}
                     {editingChatId !== chat.id && (
-                      <div className="relative flex-shrink-0">
+                      <div className="relative flex-shrink-0" data-chat-menu>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setShowChatMenu(showChatMenu === chat.id ? null : chat.id);
+                            setShowChatMenu(
+                              showChatMenu === chat.id ? null : chat.id
+                            );
                           }}
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded transition-all duration-200"
                         >
                           <MoreHorizontal className="w-4 h-4 text-gray-400" />
                         </button>
-                        
+
                         {/* Chat Menu Dropdown */}
                         {showChatMenu === chat.id && (
                           <div className="absolute right-0 top-8 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 min-w-[160px]">
@@ -257,10 +273,10 @@ export function Layout({
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
+        <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
             <Menu className="w-6 h-6 text-gray-300" />
           </button>
@@ -268,9 +284,7 @@ export function Layout({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-hidden">
-          {children}
-        </div>
+        <div className="flex-1 overflow-hidden">{children}</div>
       </div>
 
       {/* Search Dialog */}
