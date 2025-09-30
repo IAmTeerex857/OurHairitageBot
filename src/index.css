@@ -18,5 +18,5 @@ html, body {
 .assistant-content ul,
 .assistant-content ol,
 .assistant-content li {
-  margin-bottom: 20px;
+  margin-bottom: 20px!important;
 }
