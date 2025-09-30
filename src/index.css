@@ -14,6 +14,9 @@ html, body {
   scrollbar-color: rgba(120, 120, 128, 0.4) transparent;
 }
 
-.asistant-content p {
+.assistant-content p,
+.assistant-content ul,
+.assistant-content ol,
+.assistant-content li {
   margin-bottom: 20px;
 }
