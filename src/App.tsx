@@ -1,19 +1,17 @@
-import React from 'react';
-import { Layout } from './components/Layout';
-import { HomePage } from './components/HomePage';
-import { ChatInterface } from './components/ChatInterface';
-import { useSupabaseChats } from './hooks/useSupabaseChats';
-import { useSettings } from './hooks/useSettings';
-import { useEffect } from 'react';
+import { Layout } from "./components/Layout";
+import { HomePage } from "./components/HomePage";
+import { ChatInterface } from "./components/ChatInterface";
+import { useSupabaseChats } from "./hooks/useSupabaseChats";
+import { useSettings } from "./hooks/useSettings";
 
 function App() {
-  const { 
-    chats, 
-    currentChat, 
-    currentChatId, 
+  const {
+    chats,
+    currentChat,
+    currentChatId,
     loading,
-    createNewChat, 
-    addMessage, 
+    createNewChat,
+    addMessage,
     selectChat,
     deleteChat,
     renameChat,
@@ -23,23 +21,27 @@ function App() {
     setMessageEditing,
     rateMessage,
     regenerateResponse,
-    deleteMessage
+    deleteMessage,
+    onClickLogo,
   } = useSupabaseChats();
 
   const { settings, updateSettings } = useSettings();
 
   const handleSuggestedQuestion = async (question: string) => {
     let chatId = currentChatId;
-    
+
     if (!chatId) {
       chatId = await createNewChat();
       if (!chatId) return; // Handle creation failure
     }
 
-    await addMessage(chatId, question, 'user');
+    await addMessage(chatId, question, "user");
   };
 
-  const handleSendMessage = async (content: string, role: 'user' | 'assistant' = 'user') => {
+  const handleSendMessage = async (
+    content: string,
+    role: "user" | "assistant" = "user"
+  ) => {
     if (!currentChatId) return;
     await addMessage(currentChatId, content, role);
   };
@@ -59,12 +61,16 @@ function App() {
           <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 mx-auto">
             <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">OUR HAIRITAGE</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">
+            OUR HAIRITAGE
+          </h2>
           <p className="text-gray-400">Loading your conversations...</p>
         </div>
       </div>
     );
   }
+
+  const isResolvingNewChat = !!currentChatId && !currentChat;
 
   return (
     <Layout
@@ -78,8 +84,17 @@ function App() {
       onClearAllChats={clearAllChats}
       settings={settings}
       onSettingsChange={updateSettings}
+      onClickLogo={onClickLogo}
     >
-      {currentChat ? (
+      {isResolvingNewChat ? (
+        <div className="flex items-center justify-center h-full bg-slate-800">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-white text-lg font-semibold">Creating chat…</h2>
+            <p className="text-gray-400">Please wait a moment</p>
+          </div>
+        </div>
+      ) : currentChat ? (
         <ChatInterface
           chat={currentChat}
           onSendMessage={handleSendMessage}
