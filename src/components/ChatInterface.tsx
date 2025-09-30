@@ -369,7 +369,7 @@ export function ChatInterface({
                         ) : (
                           <div>
                             {message.role === "assistant" ? (
-                              <div className="asistant-content">
+                              <div className="assistant-content">
                                 <ReactMarkdown>{message.content}</ReactMarkdown>
                               </div>
                             ) : (

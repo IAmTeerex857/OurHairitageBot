@@ -11,12 +11,12 @@
 
 html, body {
   scrollbar-width: thin;
-  scrollbar-color: rgba(120, 120, 128, 0.4) transparent;
+  scrollbar-color: rgba(120, 120, 128, 0.4) transparent;  
 }
 
-.assistant-content p,
-.assistant-content ul,
-.assistant-content ol,
-.assistant-content li {
-  margin-bottom: 20px!important;
+.assistant-content p:not(:last-child),
+.assistant-content ul:not(:last-child),
+.assistant-content ol:not(:last-child),
+.assistant-content li:not(:last-child) {
+  margin-bottom: 20px;
 }
