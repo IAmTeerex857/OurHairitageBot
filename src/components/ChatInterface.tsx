@@ -532,7 +532,7 @@ export function ChatInterface({
             <div className="flex items-end border border-slate-700 rounded-xl shadow-sm focus:shadow p-2 gap-4">
               <textarea
                 rows={input.length < 80 ? 1 : undefined}
-                className="resize-none w-full bg-transparent placeholder:text-slate-400 text-slate-400 text-[9px] md:text-base  p-2 transition duration-300 ease focus:outline-none"
+                className="resize-none w-full bg-transparent placeholder:text-slate-400 text-slate-400 text-[10px] md:text-base  p-2 transition duration-300 ease focus:outline-none"
                 placeholder="Ask about hair care, styling, treatments..."
                 ref={textareaRef}
                 value={input}

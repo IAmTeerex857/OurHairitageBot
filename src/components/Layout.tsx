@@ -26,6 +26,7 @@ interface LayoutProps {
   onClearAllChats: () => void;
   settings: UserSettings;
   onSettingsChange: (settings: UserSettings) => void;
+  onClickLogo: () => void;
 }
 
 export function Layout({
@@ -40,6 +41,7 @@ export function Layout({
   onClearAllChats,
   settings,
   onSettingsChange,
+  onClickLogo,
 }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
@@ -109,11 +111,11 @@ export function Layout({
 
   const onNewChatHandler = () => {
     setSidebarOpen(false);
-    onNewChat();    
-  }
+    onNewChat();
+  };
 
   return (
-    <div className="flex min-h-screen bg-black">
+    <div className="flex min-h-screen md:max-h-screen bg-black">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -133,7 +135,10 @@ export function Layout({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-gray-700">
-            <div className="flex items-center space-x-2">
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={onClickLogo}
+            >
               <img
                 src="/logo.png"
                 alt="OUR HAIRITAGE"

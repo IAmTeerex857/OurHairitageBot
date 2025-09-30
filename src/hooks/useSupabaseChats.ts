@@ -385,10 +385,14 @@ export function useSupabaseChats() {
     console.log('Regenerate response should be handled in ChatInterface');
   }, []);
 
+  const onClickLogo = () => {
+    setCurrentChatId(null);
+  }
+
   const currentChat = chats.find(chat => chat.id === currentChatId);
 
   return {
-    chats,
+    chats,  
     currentChat,
     currentChatId,
     loading,
@@ -404,5 +408,6 @@ export function useSupabaseChats() {
     rateMessage,
     regenerateResponse,
     deleteMessage,
+    onClickLogo
   };
 }
