@@ -8,15 +8,11 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
-  MoreHorizontal,
   Trash2,
   Check,
-  X,
   AlertCircle,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Chat, Message } from "../types/chat";
 import { generateHairCareResponse, isOpenAIConfigured } from "../lib/openai";
 import clsx from "clsx";
@@ -373,7 +369,9 @@ export function ChatInterface({
                         ) : (
                           <div>
                             {message.role === "assistant" ? (
-                              <ReactMarkdown>{message.content}</ReactMarkdown>
+                              <div className="asistant-content">
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                              </div>
                             ) : (
                               <p>{message.content}</p>
                             )}
