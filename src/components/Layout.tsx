@@ -113,7 +113,7 @@ export function Layout({
   }
 
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex min-h-screen bg-black">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
