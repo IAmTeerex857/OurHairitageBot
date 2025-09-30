@@ -3,6 +3,7 @@ import { HomePage } from "./components/HomePage";
 import { ChatInterface } from "./components/ChatInterface";
 import { useSupabaseChats } from "./hooks/useSupabaseChats";
 import { useSettings } from "./hooks/useSettings";
+import { generateHairCareResponse } from "./lib/openai";
 
 function App() {
   const {
@@ -36,6 +37,22 @@ function App() {
     }
 
     await addMessage(chatId, question, "user");
+
+    try {
+      const chat = chats.find((c) => c.id === chatId);
+      const response = await generateHairCareResponse(
+        question,
+        chat?.messages || []
+      );
+      await addMessage(chatId, response, "assistant");
+    } catch (error) {
+      console.error("Error generating AI response:", error);
+      await addMessage(
+        chatId,
+        "I apologize, but I encountered an error. Please try again.",
+        "assistant"
+      );
+    }
   };
 
   const handleSendMessage = async (
