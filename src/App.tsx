@@ -89,9 +89,9 @@ function App() {
       {isResolvingNewChat ? (
         <div className="flex items-center justify-center h-full bg-slate-800">
           <div className="text-center">
-            <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-white text-lg font-semibold">Creating chat…</h2>
-            <p className="text-gray-400">Please wait a moment</p>
+            <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
           </div>
         </div>
       ) : currentChat ? (
