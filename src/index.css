@@ -13,3 +13,7 @@ html, body {
   scrollbar-width: thin;
   scrollbar-color: rgba(120, 120, 128, 0.4) transparent;
 }
+
+.asistant-content p {
+  margin-bottom: 20px;
+}

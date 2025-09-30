@@ -107,6 +107,11 @@ export function Layout({
     };
   }, []);
 
+  const onNewChatHandler = () => {
+    setSidebarOpen(false);
+    onNewChat();    
+  }
+
   return (
     <div className="flex h-screen bg-black">
       {/* Mobile sidebar overlay */}
@@ -146,7 +151,7 @@ export function Layout({
           {/* New Chat Button */}
           <div className="p-3 border-b border-gray-700">
             <button
-              onClick={onNewChat}
+              onClick={onNewChatHandler}
               className="w-full flex items-center space-x-3 px-3 py-3 text-white hover:bg-gray-800 rounded-lg transition-colors text-left"
             >
               <Plus className="w-4 h-4" />
