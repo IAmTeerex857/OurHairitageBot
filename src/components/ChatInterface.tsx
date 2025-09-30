@@ -532,7 +532,7 @@ export function ChatInterface({
             <div className="flex items-end border border-slate-700 rounded-xl shadow-sm focus:shadow p-2 gap-4">
               <textarea
                 rows={input.length < 80 ? 1 : undefined}
-                className="resize-none w-full bg-transparent placeholder:text-slate-400 text-slate-400 text-base  p-2 transition duration-300 ease focus:outline-none"
+                className="resize-none w-full bg-transparent placeholder:text-slate-400 text-slate-400 text-[9px] md:text-base  p-2 transition duration-300 ease focus:outline-none"
                 placeholder="Ask about hair care, styling, treatments..."
                 ref={textareaRef}
                 value={input}
@@ -552,7 +552,7 @@ export function ChatInterface({
                 className="flex items-center rounded-full bg-white py-2.5 px-2.5 border border-transparent text-center text-sm text-black transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-300 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                 type="submit"
               >
-                <Send className="w-6 h-6 md:w-5 md:h-5 mx-auto" />
+                <Send className="w-3 h-3 md:w-5 md:h-5 mx-auto" />
               </button>
             </div>
           </div>
